@@ -10,7 +10,7 @@ class GqlJavaScalars {
     companion object {
 
         val uuid by lazy {
-            GqlJavaExtentions.scalarTypeDsl<UUID> {
+            GqlJavaExtensions.scalarTypeDsl<UUID> {
                 parseLiteral {
                     when (it) {
                         is StringValue -> UUID.fromString(it.value)
@@ -35,7 +35,7 @@ class GqlJavaScalars {
         }
 
         val double by lazy {
-            GqlJavaExtentions.scalarTypeDsl<Double>(Scalars.GraphQLFloat.coercing) { }
+            GqlJavaExtensions.scalarTypeDsl<Double>(Scalars.GraphQLFloat.coercing) { }
         }
     }
 }

@@ -1,0 +1,20 @@
+addons:
+  sonarcloud:
+    organization: fvershinin
+    token:
+      secure: "MHo4XY86wzTZNbgKeAYZA4Sc2shDt5oQlEll24F7RWYjis065X3qJnAz1NC7oeU2dqWBSh94H3TEnvaRihBp5awA9KL5OXfgxcJPn8+ej/w50aHG9u6Z2mFComXCjgNru7nlHfT2ZNvSIoB9dxF9eRmIXNTM/XkDcRN0lR6BHW+dIsYr7P8aCws6ismdw1siXimzuKJFXObXvzFVbugPzcXKHkmpkK7QmIREJnEbIfj1wxWv1B9JVtzJ0zM+j+9YEIDMMMgj26+fOcmxLGrSOkrlkKZJnBy74TFqvNE/v9C1mlJqdgTQpf1z164r+uhHU64L6+p55EDMzfI+0NFghS3bQiRR1W24xWDRXMQFig/FXUbsH/f+YFPrULNIDq2E/eZ8FgXBjGaVaiwEQFdTj7w2XZ0/Ou8/wOwKbpyk5u0ZQOrrcsw55eVWZ+iZqL3nCNa6l3aWzE41oXtLuZgyoabVQBGGL49IHKcQAAeukjksvaxzYRpvB7/hS/R9S46LGnbTDol6w08EXmOfVOW7hERS2/TRKO6DyPJBAEgC1OSa34lnbrQwzt9zIsqS57Sz5ksuVoeo5GBeI5qxUMJ7aKoanVZVnbVmw89uWJ/qXkKz90DLQ8RMTmQxH32ILvp/FmB0f+viHF/C/IBfwSgmiAe8pmbkn5HBKc5D8JkrWG8="
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+  - "$HOME/.sonar"
+install: true
+language: java
+jdk:
+- openjdk13
+script:
+  - "./gradlew build --scan -s"
+  - "sonar-scanner"

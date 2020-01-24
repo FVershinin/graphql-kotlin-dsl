@@ -8,26 +8,22 @@ import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 
-
-class GqlJavaExtentions {
+class GqlJavaExtensions {
     companion object {
 
         inline fun <reified T> scalarTypeDsl(coercing: Coercing<Any, Any>? = null, f: GraphQLScalarTypeDsl<T>.() -> Unit): GraphQLScalarType =
                 GraphQLScalarTypeDsl<T>().run {
                     f()
-
-                    name nullThen { name = T::class.gqlName() }
-
-                    GraphQLScalarType(name, description, coercing ?: object : Coercing<T, String> {
-                        override fun parseValue(input: Any?): T = _parseValue(input)
-                        override fun parseLiteral(input: Any?): T? = _parseLiteral(input)
-                        override fun serialize(dataFetcherResult: Any?): String = _serialize(dataFetcherResult)
-                    })
+                    GraphQLScalarType.newScalar()
+                            .name(name ?: T::class.gqlName())
+                            .description(description)
+                            .coercing(coercing ?: object : Coercing<T, String> {
+                                override fun parseValue(input: Any?): T = _parseValue(input)
+                                override fun parseLiteral(input: Any?): T? = _parseLiteral(input)
+                                override fun serialize(dataFetcherResult: Any?): String = _serialize(dataFetcherResult)
+                            })
+                            .build()
                 }
-
-        inline infix fun <T> T?.nullThen(f: () -> Unit) {
-            if (this == null) f()
-        }
     }
 }
 
@@ -85,40 +81,28 @@ fun SchemaDsl.graphQL(r: RuntimeWiring.Builder.() -> Unit, g: GraphQL.Builder.()
         graphQl(GqlJavaRuntimeWiringDsl.newRuntimeWiring(r), g)
 
 fun SchemaDsl.graphQL(g: GraphQL.Builder.() -> Unit): GraphQL {
-    val schemaDsl = this
-
     return graphQl(RuntimeWiring.newRuntimeWiring().apply {
-
-        if (schemaDsl.queries.isNotEmpty()) {
-            this.queryType {
-                schemaDsl.queries.forEach { query ->
-                    query.dataFetcher?.let { df ->
-                        dataFetcher(query.name, df)
-                    }
-                }
+        queryType {
+            for (query in this@graphQL.queries) {
+                dataFetcher(query.name, query.dataFetcher ?: continue)
             }
         }
-        if (schemaDsl.mutations.isNotEmpty()) {
-            this.mutationType {
-                schemaDsl.mutations.forEach { mutation ->
-                    mutation.dataFetcher?.let { df ->
-                        dataFetcher(mutation.name, df)
-                    }
-                }
+        mutationType {
+            for (mutation in this@graphQL.mutations) {
+                dataFetcher(mutation.name, mutation.dataFetcher ?: continue)
             }
         }
-        schemaDsl.scalars.forEach {
+        this@graphQL.scalars.forEach {
             it.graphQlScalarType?.let {
                 scalar(it).build()
             }
         }
-        schemaDsl.types.forEach { type ->
+        this@graphQL.types.forEach { type ->
             this.type(TypeRuntimeWiring.newTypeWiring(type.name).apply {
-                type.dataFetcher.forEach { name, df ->
+                type.dataFetcher.forEach { (name, df) ->
                     dataFetcher(name, df)
                 }
             }.build())
         }
     }.build(), g)
 }
-
